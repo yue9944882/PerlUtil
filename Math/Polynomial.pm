@@ -29,21 +29,29 @@ sub parse_poly ($){
 	
 	#Check if the given parameter is a polynomial
 
-	unless($check){die 'Parsing Process Cannot Continue..\nExiting...\n';}
+	unless($check){
+		die "Parsing Process Cannot Continue..\nExiting...\n";
+	}
+
 
 	#Parsing Polynomial
 }
 
+#Recursively Parse Polynomial with brancket
+
+sub parse_brck{
+		
+}
 
 sub check_poly($){
 	my $poly=shift;
 
 	if($poly=~/^(.+)=([ \(\)\*\/+-^x\d ]+)$/x){
 		print "Check Polynomial Sucess!\n";
-		return undef;
+		return 1;
 	}else{
 		print "Check Polynomial Failed!\n";
-		return 1;
+		return undef;
 	}
 }
 
