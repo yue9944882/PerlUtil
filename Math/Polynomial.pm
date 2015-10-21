@@ -236,7 +236,7 @@ sub parse_brck($$){
 sub check_poly($){
 	my $poly=shift;
 
-	if($poly=~/^(.+)=([sincos\(\)\*\/\+\-\^x\d ]+)$/x){
+	if($poly=~/^(.+)=([sin\(\)\*\/\+\-\^\.x0-9]+)$/x){
 		print "Check Polynomial Sucess!\n";
 		return 1;
 	}else{
@@ -267,6 +267,9 @@ sub calc_poly($$$){
 		if($num2==0){$num2=$inf;}
 		$ret=$num1/$num2;
 	}elsif($op eq '^'){
+		if($num1<0&&$num2>0&&$num2<1){
+			die 'Cannot Support Complex Number Computing!';
+		}
 		$ret=$num1**$num2;
 	}else{
 		die 'Operator Recgnization Error!';

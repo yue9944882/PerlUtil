@@ -1,0 +1,32 @@
+#####################
+
+	Polynomial Parse Script
+				--enabled to solve compicated polynomial
+#####################
+
+Supporting Math Operator: ^ > * / > + - > sin ( After Brancket Solved )
+
+Usage:
+
+	use PerlUtil::Math::Polynomial;
+
+Function:
+	
+	parse_poly($polynomial $x_value): 
+
+Return:
+	number after computing out the polynomial by giving 'x' a value;
+
+Example:
+
+(if we want to solve with x=3)	f(x)=((sin(x)+4)+7/x)^2
+ 
+(then)		$var='f(x)=((sin(x)+4)+7/x)^2';
+
+		$ret=parse_poly($var,3);			
+		
+(finally)	$ret=41.9185460698776
+
+
+					---by Kimmin 
+					SSE of Tongji University
