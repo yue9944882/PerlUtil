@@ -64,15 +64,23 @@ sub parse_brck($$){
 
 	while(1){		
 		
+		print "sub:$sub_poly\n";
+		
 		$in_brck=take_brck($sub_poly);
+		
+		print "inb:$in_brck\n";
 		
 		last if($in_brck eq $sub_poly);
 		
 		my $brckval=&parse_brck($in_brck,$x_var);
+		
+		print "bcv:$brckval\n";
 	
 		my $tmp=$in_brck;
 		
-		$tmp=~s/([\^\+\-\*\/])/\\$1/;
+		while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
+			;
+		}
 		
 		$sub_poly=~s/\($tmp\)/$brckval/;
 		
@@ -93,7 +101,9 @@ sub parse_brck($$){
 			if($sub_poly=~/^(($num_reg)\s*($op_reg)\s*($num_reg))/){
 				$ans=&calc_poly($3,$2,$4);
 				my $tmp=$1;
-				$tmp=~s/([\^\+\-\*\/])/\\$1/;
+				while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
+					;
+				}
 				$sub_poly=~s/$tmp/$ans/;	
 			}elsif($sub_poly=~/^($num_reg)$/){
 				$ans=$1;
@@ -115,11 +125,19 @@ sub parse_brck($$){
 			if($sub_poly=~/^(($num_reg)\s*($op_reg)\s*($num_reg))/){
 				$ans=&calc_poly($3,$2,$4);
 				
+				print "$ans","\n";
+				
 				my $tmp=$1;
 				
-				$tmp=~s/([\^\+\-\*\/])/\\$1/;
+				while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
+					;
+				}
 			
-				$sub_poly=~s/$tmp/$ans/;				
+				print "pattern:$tmp\n";
+			
+				$sub_poly=~s/$tmp/$ans/;	
+				
+				print "===>$sub_poly\n";			
 			
 			}elsif($sub_poly=~/^($num_reg)/){
 				$ans=$1;
