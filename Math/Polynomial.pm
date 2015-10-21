@@ -30,6 +30,7 @@ sub parse_poly ($$){
 	
 	my $poly=shift;
 	my $x_var=shift;
+	my $ret;
 
 	my $check=&check_poly($poly);
 	
@@ -43,10 +44,10 @@ sub parse_poly ($$){
 	#Parsing Polynomial
 	
 	if($poly=~/=\s*(.*)$/){
-		&parse_brck($1,$x_var);		
+		$ret=&parse_brck($1,$x_var);		
 	}
 	
-	
+	return $ret;
 }
 
 #Recursively Parse Polynomial with brancket
@@ -60,24 +61,20 @@ sub parse_brck($$){
 	
 	my $rec_flag;
 	
-	
-	while($sub_poly=~/.*?\( (.*) \).*?/gx){
+
+	while(1){		
 		
-		last unless($1);
+		$in_brck=take_brck($sub_poly);
 		
-		$in_brck=$1;
+		last if($in_brck eq $sub_poly);
 		
 		my $brckval=&parse_brck($in_brck,$x_var);
 	
-		my $tmp=$1;
+		my $tmp=$in_brck;
 		
 		$tmp=~s/([\^\+\-\*\/])/\\$1/;
 		
-		print "$tmp\n";
-		
 		$sub_poly=~s/\($tmp\)/$brckval/;
-		
-		print "After no brancket: $sub_poly\n";
 		
 		$rec_flag=1;
 		
@@ -92,8 +89,6 @@ sub parse_brck($$){
 			print "******\n";
 			
 			$sub_poly=~s/x/$x_var/;
-			
-			print "$sub_poly","\n";
 			
 			if($sub_poly=~/^(($num_reg)\s*($op_reg)\s*($num_reg))/){
 				$ans=&calc_poly($3,$2,$4);
@@ -123,10 +118,10 @@ sub parse_brck($$){
 				my $tmp=$1;
 				
 				$tmp=~s/([\^\+\-\*\/])/\\$1/;
-					
+			
 				$sub_poly=~s/$tmp/$ans/;				
 			
-			}elsif($sub_poly=~/^($num_reg)$/){
+			}elsif($sub_poly=~/^($num_reg)/){
 				$ans=$1;
 				last;
 			}else{
@@ -175,6 +170,49 @@ sub calc_poly($$$){
 		die 'Operator Recgnization Error!';
 	}
 	
+}
+
+sub take_brck($){
+	
+	my $exp=shift;
+	my @stack=split //,$exp;
+	my $start;
+	my $brck_cnt=0;
+	my $top;
+	my $rec_flag;
+	my $ret;
+	
+	my @in_brck;
+	
+	while(1){
+		last if (($#stack+1)==0);
+		last if ($start && ($brck_cnt==0));
+		
+		$top=shift @stack;
+		
+		if($rec_flag){
+			push @in_brck,$top;
+		}
+		
+		if($top eq '('){
+			$start=1;
+			$rec_flag=1;
+			$brck_cnt++;
+		}
+		if($top eq ')'){
+			$brck_cnt--;
+			if($brck_cnt==0){
+				pop @in_brck;
+			}
+		}
+	}
+	
+	if($rec_flag){
+		$ret=join "",@in_brck;
+		return $ret;
+	}else{
+		return $exp;
+	}
 }
 
 
