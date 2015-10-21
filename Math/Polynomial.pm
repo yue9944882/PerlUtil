@@ -25,6 +25,13 @@ our %EXPORT_TAGS=(
 
 my $num_reg=$RE{num}{real};
 my $op_reg=qr/[\+\-\*\/\^]/;
+my $op_reg1=qr/[\^]/;
+my $op_reg2=qr/[\*\/]/;
+my $op_reg3=qr/[\+\-]/;
+
+our $PI=3.141592653897;
+
+our $inf=99999999999;
 
 sub parse_poly ($$){
 	
@@ -78,7 +85,7 @@ sub parse_brck($$){
 	
 		my $tmp=$in_brck;
 		
-		while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
+		while($tmp=~s/((?<!\\)[\(\)\^\+\-\*\/])/\\$1/){
 			;
 		}
 		
@@ -98,14 +105,45 @@ sub parse_brck($$){
 			
 			$sub_poly=~s/x/$x_var/;
 			
-			if($sub_poly=~/^(($num_reg)\s*($op_reg)\s*($num_reg))/){
+			if($sub_poly=~/(?:\+|\-)*(($num_reg)\s*($op_reg1)\s*($num_reg))/){
+				#print"1";
 				$ans=&calc_poly($3,$2,$4);
 				my $tmp=$1;
 				while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
 					;
 				}
 				$sub_poly=~s/$tmp/$ans/;	
+			}elsif($sub_poly=~/(?:\+|\-)*(($num_reg)\s*($op_reg2)\s*($num_reg))/){
+				#print"2";
+				$ans=&calc_poly($3,$2,$4);
+				my $tmp=$1;
+				while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
+					;
+				}
+				$sub_poly=~s/$tmp/$ans/;	
+			}elsif($sub_poly=~/(?:\+|\-)*(($num_reg)\s*($op_reg3)\s*($num_reg))/){
+				#print"3";
+				$ans=&calc_poly($3,$2,$4);
+				my $tmp=$1;
+				while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
+					;
+				}
+				$sub_poly=~s/$tmp/$ans/;	
+			}elsif($sub_poly=~/(sin($num_reg))/){
+				#print"4";
+				$ans=sin $2;
+				my $tmp=$1;
+				while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
+					;
+				}
+			
+				print "pattern:$tmp\n";
+			
+				$sub_poly=~s/$tmp/$ans/;	
+				
+				print "===>$sub_poly\n";	
 			}elsif($sub_poly=~/^($num_reg)$/){
+				#print"5";
 				$ans=$1;
 				last;
 			}else{
@@ -122,10 +160,38 @@ sub parse_brck($$){
 			$sub_poly=~s/x/$x_var/;
 			
 			
-			if($sub_poly=~/^(($num_reg)\s*($op_reg)\s*($num_reg))/){
+			if($sub_poly=~/(?:\+|\-)*(($num_reg)\s*($op_reg1)\s*($num_reg))/){
 				$ans=&calc_poly($3,$2,$4);
-				
 				print "$ans","\n";
+				my $tmp=$1;	
+				while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
+					;
+				}		
+				print "pattern:$tmp\n";			
+				$sub_poly=~s/$tmp/$ans/;					
+				print "===>$sub_poly\n";			
+			}elsif($sub_poly=~/(?:\+|\-)*(($num_reg)\s*($op_reg2)\s*($num_reg))/){
+				$ans=&calc_poly($3,$2,$4);
+				print "$ans","\n";		
+				my $tmp=$1;
+				while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
+					;
+				}
+				print "pattern:$tmp\n";
+				$sub_poly=~s/$tmp/$ans/;	
+				print "===>$sub_poly\n";	
+			}elsif($sub_poly=~/(?:\+|\-)*(($num_reg)\s*($op_reg3)\s*($num_reg))/){
+				$ans=&calc_poly($3,$2,$4);
+				print "$ans","\n";		
+				my $tmp=$1;
+				while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
+					;
+				}
+				print "pattern:$tmp\n";
+				$sub_poly=~s/$tmp/$ans/;	
+				print "===>$sub_poly\n";	
+			}elsif($sub_poly=~/(sin($num_reg))/){
+				$ans=sin $2;
 				
 				my $tmp=$1;
 				
@@ -137,8 +203,7 @@ sub parse_brck($$){
 			
 				$sub_poly=~s/$tmp/$ans/;	
 				
-				print "===>$sub_poly\n";			
-			
+				print "===>$sub_poly\n";	
 			}elsif($sub_poly=~/^($num_reg)/){
 				$ans=$1;
 				last;
@@ -157,7 +222,7 @@ sub parse_brck($$){
 sub check_poly($){
 	my $poly=shift;
 
-	if($poly=~/^(.+)=([ \(\)\*\/\+\-\^x\d ]+)$/x){
+	if($poly=~/^(.+)=([sincos\(\)\*\/\+\-\^x\d ]+)$/x){
 		print "Check Polynomial Sucess!\n";
 		return 1;
 	}else{
@@ -174,6 +239,10 @@ sub calc_poly($$$){
 
 	my $ret;
 	
+	print "op:$op\n";
+	print "num1:$num1\n";
+	print "num2:$num2\n";
+	
 	if($op eq '+'){
 		$ret=$num1+$num2;	
 	}elsif($op eq '-'){
@@ -181,13 +250,13 @@ sub calc_poly($$$){
 	}elsif($op eq '*'){
 		$ret=$num1*$num2;
 	}elsif($op eq '/'){
+		if($num2==0){$num2=$inf;}
 		$ret=$num1/$num2;
 	}elsif($op eq '^'){
 		$ret=$num1**$num2;
 	}else{
 		die 'Operator Recgnization Error!';
 	}
-	
 }
 
 sub take_brck($){
