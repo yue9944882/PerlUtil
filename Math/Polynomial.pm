@@ -24,7 +24,7 @@ our %EXPORT_TAGS=(
 #Code Defination Begin
 
 my $num_reg=$RE{num}{real};
-my $op_reg=qr/[+-*/^]/;
+my $op_reg=qr/[\+\-\*\/\^]/;
 
 sub parse_poly ($$){
 	
@@ -42,6 +42,9 @@ sub parse_poly ($$){
 
 	#Parsing Polynomial
 	
+	if($poly=~/=(.*)$/){
+		&parse_brck($1,$x_var);		
+	}
 	
 	
 }
@@ -56,27 +59,35 @@ sub parse_brck($$){
 	my $in_brck;
 	
 	while($sub_poly=~/\( (.*) \)/gx){
-		
 		$in_brck=$1;
 		&parse_brck($sub_poly,$x_var);
-		
 	}
+	
 	
 	if($in_brck=~s/x/$x_var/){
 		print "x->$x_var: $in_brck"."\n";
+	}else{
+		$in_brck=$sub_poly;
 	}
 	
+	my $ans;
+	
+	print $in_brck,"\n";
+	
 	if($in_brck=~/($num_reg)\s*($op_reg)\s*($num_reg)/x){
-		my $ans=&calc_poly($2,$1,$3);
-		
+		$ans=&calc_poly($2,$1,$3);
+	}elsif($in_brck!~/^($num_reg)$/){
+		$ans=$1;
 	}
+	
+	print "\n$ans\n";
 	
 }
 
 sub check_poly($){
 	my $poly=shift;
 
-	if($poly=~/^(.+)=([ \(\)\*\/+-^x\d ]+)$/x){
+	if($poly=~/^(.+)=([ \(\)\*\/\+\-\^x\d ]+)$/x){
 		print "Check Polynomial Sucess!\n";
 		return 1;
 	}else{
