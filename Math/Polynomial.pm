@@ -105,31 +105,7 @@ sub parse_brck($$){
 			
 			$sub_poly=~s/x/$x_var/;
 			
-			if($sub_poly=~/(?:\+|\-)*(($num_reg)\s*($op_reg1)\s*($num_reg))/){
-				#print"1";
-				$ans=&calc_poly($3,$2,$4);
-				my $tmp=$1;
-				while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
-					;
-				}
-				$sub_poly=~s/$tmp/$ans/;	
-			}elsif($sub_poly=~/(?:\+|\-)*(($num_reg)\s*($op_reg2)\s*($num_reg))/){
-				#print"2";
-				$ans=&calc_poly($3,$2,$4);
-				my $tmp=$1;
-				while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
-					;
-				}
-				$sub_poly=~s/$tmp/$ans/;	
-			}elsif($sub_poly=~/(?:\+|\-)*(($num_reg)\s*($op_reg3)\s*($num_reg))/){
-				#print"3";
-				$ans=&calc_poly($3,$2,$4);
-				my $tmp=$1;
-				while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
-					;
-				}
-				$sub_poly=~s/$tmp/$ans/;	
-			}elsif($sub_poly=~/(sin($num_reg))/){
+			if($sub_poly=~/(sin($num_reg))/){
 				#print"4";
 				$ans=sin $2;
 				my $tmp=$1;
@@ -142,6 +118,30 @@ sub parse_brck($$){
 				$sub_poly=~s/$tmp/$ans/;	
 				
 				print "===>$sub_poly\n";	
+			}elsif($sub_poly=~/(?:(?<!^)\+|(?<!^)\-)*(($num_reg)\s*($op_reg1)\s*($num_reg))/){
+				#print"1";
+				$ans=&calc_poly($3,$2,$4);
+				my $tmp=$1;
+				while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
+					;
+				}
+				$sub_poly=~s/$tmp/$ans/;	
+			}elsif($sub_poly=~/(?:(?<!^)\+|(?<!^)\-)*(($num_reg)\s*($op_reg2)\s*($num_reg))/){
+				#print"2";
+				$ans=&calc_poly($3,$2,$4);
+				my $tmp=$1;
+				while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
+					;
+				}
+				$sub_poly=~s/$tmp/$ans/;	
+			}elsif($sub_poly=~/(?:(?<!^)\+|(?<!^)\-)*(($num_reg)\s*($op_reg3)\s*($num_reg))/){
+				#print"3";
+				$ans=&calc_poly($3,$2,$4);
+				my $tmp=$1;
+				while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
+					;
+				}
+				$sub_poly=~s/$tmp/$ans/;	
 			}elsif($sub_poly=~/^($num_reg)$/){
 				#print"5";
 				$ans=$1;
@@ -160,7 +160,21 @@ sub parse_brck($$){
 			$sub_poly=~s/x/$x_var/;
 			
 			
-			if($sub_poly=~/(?:\+|\-)*(($num_reg)\s*($op_reg1)\s*($num_reg))/){
+			if($sub_poly=~/(sin($num_reg))/){
+				$ans=sin $2;
+				
+				my $tmp=$1;
+				
+				while($tmp=~s/((?<!\\)[\^\+\-\*\/])/\\$1/){
+					;
+				}
+			
+				print "pattern:$tmp\n";
+			
+				$sub_poly=~s/$tmp/$ans/;	
+				
+				print "===>$sub_poly\n";	
+			}elsif($sub_poly=~/(?:(?<!^)\+|(?<!^)\-)*(($num_reg)\s*($op_reg1)\s*($num_reg))/){
 				$ans=&calc_poly($3,$2,$4);
 				print "$ans","\n";
 				my $tmp=$1;	
@@ -170,7 +184,7 @@ sub parse_brck($$){
 				print "pattern:$tmp\n";			
 				$sub_poly=~s/$tmp/$ans/;					
 				print "===>$sub_poly\n";			
-			}elsif($sub_poly=~/(?:\+|\-)*(($num_reg)\s*($op_reg2)\s*($num_reg))/){
+			}elsif($sub_poly=~/(?:(?<!^)\+|(?<!^)\-)*(($num_reg)\s*($op_reg2)\s*($num_reg))/){
 				$ans=&calc_poly($3,$2,$4);
 				print "$ans","\n";		
 				my $tmp=$1;
@@ -180,7 +194,7 @@ sub parse_brck($$){
 				print "pattern:$tmp\n";
 				$sub_poly=~s/$tmp/$ans/;	
 				print "===>$sub_poly\n";	
-			}elsif($sub_poly=~/(?:\+|\-)*(($num_reg)\s*($op_reg3)\s*($num_reg))/){
+			}elsif($sub_poly=~/(?:(?<!^)\+|(?<!^)\-)*(($num_reg)\s*($op_reg3)\s*($num_reg))/){
 				$ans=&calc_poly($3,$2,$4);
 				print "$ans","\n";		
 				my $tmp=$1;
