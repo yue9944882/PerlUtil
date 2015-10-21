@@ -42,7 +42,7 @@ sub parse_poly ($$){
 
 	#Parsing Polynomial
 	
-	if($poly=~/=(.*)$/){
+	if($poly=~/=\s*(.*)$/){
 		&parse_brck($1,$x_var);		
 	}
 	
@@ -58,31 +58,88 @@ sub parse_brck($$){
 	
 	my $in_brck;
 	
-	while($sub_poly=~/\( (.*) \)/gx){
+	my $rec_flag;
+	
+	
+	while($sub_poly=~/.*?\( (.*) \).*?/gx){
+		
+		last unless($1);
+		
 		$in_brck=$1;
-		&parse_brck($sub_poly,$x_var);
-	}
+		
+		my $brckval=&parse_brck($in_brck,$x_var);
 	
-	
-	if($in_brck=~s/x/$x_var/){
-		print "x->$x_var: $in_brck"."\n";
-	}else{
-		$in_brck=$sub_poly;
+		my $tmp=$1;
+		
+		$tmp=~s/([\^\+\-\*\/])/\\$1/;
+		
+		print "$tmp\n";
+		
+		$sub_poly=~s/\($tmp\)/$brckval/;
+		
+		print "After no brancket: $sub_poly\n";
+		
+		$rec_flag=1;
+		
 	}
 	
 	my $ans;
 	
-	print $in_brck,"\n";
+	if($rec_flag){
+		
+		while(1){
+			
+			print "******\n";
+			
+			$sub_poly=~s/x/$x_var/;
+			
+			print "$sub_poly","\n";
+			
+			if($sub_poly=~/^(($num_reg)\s*($op_reg)\s*($num_reg))/){
+				$ans=&calc_poly($3,$2,$4);
+				my $tmp=$1;
+				$tmp=~s/([\^\+\-\*\/])/\\$1/;
+				$sub_poly=~s/$tmp/$ans/;	
+			}elsif($sub_poly=~/^($num_reg)$/){
+				$ans=$1;
+				last;
+			}else{
+				die 'Loop Error!';
+			}
+		}
+		
+	}else{
 	
-	if($in_brck=~/($num_reg)\s*($op_reg)\s*($num_reg)/x){
-		$ans=&calc_poly($2,$1,$3);
-	}elsif($in_brck!~/^($num_reg)$/){
-		$ans=$1;
+		print "&&&&&&&\n";
+	
+		while(1){
+			
+			$sub_poly=~s/x/$x_var/;
+			
+			
+			if($sub_poly=~/^(($num_reg)\s*($op_reg)\s*($num_reg))/){
+				$ans=&calc_poly($3,$2,$4);
+				
+				my $tmp=$1;
+				
+				$tmp=~s/([\^\+\-\*\/])/\\$1/;
+					
+				$sub_poly=~s/$tmp/$ans/;				
+			
+			}elsif($sub_poly=~/^($num_reg)$/){
+				$ans=$1;
+				last;
+			}else{
+				die 'Loop Error!';
+			}
+		}	
+		
 	}
 	
-	print "\n$ans\n";
-	
+	return $ans;
 }
+
+
 
 sub check_poly($){
 	my $poly=shift;
