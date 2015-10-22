@@ -2,9 +2,6 @@
 
 package PerlUtil::Web::MultiHttp;
 
-use strict;
-use warnings;
-
 
 use LWP::Simple;
 
@@ -30,11 +27,11 @@ our %EXPORT_TAGS=(
 
 );
 
-
+our $name_cnt:shared;
 
 #Code Defination Begin
 
-sub multi_http_parse{
+sub multi_http_parse($$$){
 	
 	my $filename=shift;
 	my $thread_num=shift;
@@ -45,84 +42,69 @@ sub multi_http_parse{
 	our %filmhash:shared;
 	my $loop_cnt;
 	my @url_arr;
-	state $name_cnt:shared;
+	
+	my $fh;
 
 	# Get Url List into @url_arr 
 
-	while(<$filename>){
-	
+	open $fh,"<$filename";
+
+	while(<$fh>){
 		chomp;
-	
-		if(/.+productId:\s+(\S+) /x){
-		
-			chomp $1;
-		
-			unless($namehash{$1}){
-
-				$namehash{$1}++;
-		
-				my $url=$1;
-			
-				push @url_arr,$url;
-			
-			}else{
-				next;
-			}
-
-			$loop_cnt++;
-			print "\r$loop_cnt";
-		}
+		print $_,"\n";
+		push @url_arr,$_;
+		$loop_cnt++;	
+		print "Target URL Number: $loop_cnt\n";
 	}
-
+	close $fh;
+	
+	print Dumper(@url_arr);
+	
 	print "\n";
 
 
 	my @threadlist;
-
-	$indx=0;
-
+	my $indx=0;
 	my $file_indx=0;
-
 	my $file_len=@url_arr;
-
+	
 	while($indx<$thread_num){
 		my $tmp=$indx;
 		my $param=pop @url_arr;
 		sleep 1;
-		$threadlist[$indx]=threads->create(\&thread_proc,$param,\%filmhash,\$name_cnt);	
+		$threadlist[$indx]=threads->create(\&thread_proc,$param,\%filmhash,\$name_cnt,$html_regex);	
 		$indx++;
 		$file_indx++;
 	}
 
-	while($file_indx<=$file_len){
+	while($file_indx<=$file_len-$thread_num){
 		for my $thread (@threadlist){	
 			my $f=$thread->is_joinable;
 			if($f){
 				$thread->join();
 				my $param=pop @url_arr;
 				sleep 1;
-				$thread=threads->create(\&thread_proc,$param,\%filmhash,\$name_cnt,\$html_regex);
+				if($param){
+					$thread=threads->create(\&thread_proc,$param,\%filmhash,\$name_cnt,$html_regex);
+				}else{
+					$thread=undef;
+				}
 				$file_indx++;
 			}	
 		}
 	}
 
 	for my $thread (@threadlist){	
-		$thread->join();
+		$thread->join() if ($thread);
 	}
 	
 	my $t2=gettimeofday;
-
 	my $diff=$t2-$t1;
-
 	print "Using time $diff\n";
-
 	open $fh,">>result.txt";
-
 	for my $name (keys %filmhash){
 		print $fh $name."\n";
 	}
-
 	close $fh;
 }
 
@@ -134,15 +116,18 @@ sub thread_proc{
 	my $url=shift;
 	my $ref=shift;
 	my $nref=shift;
+	my $htmlreg=shift;
 
 	print "Requesting ".$url."\n";
 	my $html=LWP::Simple::get($url);
 	
+	#print $html,"\n";
+	
 	if($html){
-		print "$url Parsing Success!\n";
+		#print "$url Parsing Success!\n";
 		my $name;
 		
-		if($html=~/$html_regex/){
+		if($html=~/($htmlreg)/){
 			$name=$1;
 		}
 		
@@ -151,11 +136,14 @@ sub thread_proc{
 			$$nref=$$nref+1;
 			print "Total Extract Number: $$nref \n";
 		}
-		print $name."\n";
 	
 	}else{
 		print "$url Parsing Failed!\n";
 	}
 }
+
+
+1;
+
 
 
