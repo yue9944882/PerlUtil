@@ -35,6 +35,11 @@ our %EXPORT_TAGS=(
 #Code Defination Begin
 
 sub multi_http_parse{
+	
+	my $filename=shift;
+	my $thread_num=shift;
+	my $html_regex=shift;
+	
 	my $t1=gettimeofday;
 	my %namehash;
 	our %filmhash:shared;
@@ -42,8 +47,9 @@ sub multi_http_parse{
 	my @url_arr;
 	state $name_cnt:shared;
 
+	# Get Url List into @url_arr 
 
-	while(<>){
+	while(<$filename>){
 	
 		chomp;
 	
@@ -55,22 +61,20 @@ sub multi_http_parse{
 
 				$namehash{$1}++;
 		
-				my $url="http://www.amazon.com/dp/".$1;
+				my $url=$1;
 			
 				push @url_arr,$url;
 			
 			}else{
 				next;
+			}
+
+			$loop_cnt++;
+			print "\r$loop_cnt";
 		}
-
-		$loop_cnt++;
-		
-		print "\r$loop_cnt";
-	
-	}
 	}
 
-
+	print "\n";
 
 
 	my @threadlist;
@@ -81,7 +85,7 @@ sub multi_http_parse{
 
 	my $file_len=@url_arr;
 
-	while($indx<30){
+	while($indx<$thread_num){
 		my $tmp=$indx;
 		my $param=pop @url_arr;
 		sleep 1;
@@ -97,7 +101,7 @@ sub multi_http_parse{
 				$thread->join();
 				my $param=pop @url_arr;
 				sleep 1;
-				$thread=threads->create(\&thread_proc,$param,\%filmhash,\$name_cnt);
+				$thread=threads->create(\&thread_proc,$param,\%filmhash,\$name_cnt,\$html_regex);
 				$file_indx++;
 			}	
 		}
@@ -107,27 +111,23 @@ sub multi_http_parse{
 		$thread->join();
 	}
 	
-}
+	my $t2=gettimeofday;
 
+	my $diff=$t2-$t1;
 
+	print "Using time $diff\n";
 
-sub get_film{
-	
-	my $html=shift;
-	
-	if($html=~/<meta name="title" content="(.*)"/){	
-		my $tmp=$1;
-		if($tmp=~/Amazon.com:\s*(.*?):/){
-			return $1;
-		}elsif($tmp=~/(.*):/){
-			return $1;
-		}else{
-			return $tmp;
-		}
+	open $fh,">>result.txt";
+
+	for my $name (keys %filmhash){
+		print $fh $name."\n";
 	}
-	return "none";
+
+	close $fh;
 }
 
+
+#/<meta name="title" content="(.*)"/
 
 sub thread_proc{
 	
@@ -137,37 +137,25 @@ sub thread_proc{
 
 	print "Requesting ".$url."\n";
 	my $html=LWP::Simple::get($url);
+	
 	if($html){
 		print "$url Parsing Success!\n";
-		my @ret=&get_film($html);	
-		my $name=shift @ret;	
-		if($name=~/(.*?)\s*\[VHS\]/){
+		my $name;
+		
+		if($html=~/$html_regex/){
 			$name=$1;
 		}
+		
 		if(!$ref->{$name}){	
 			$ref->{$name}++;
 			$$nref=$$nref+1;
-			print "Totally Film Number: $$nref \n";
+			print "Total Extract Number: $$nref \n";
 		}
 		print $name."\n";
 	
 	}else{
 		print "$url Parsing Failed!\n";
 	}
-	
 }
 
-my $t2=gettimeofday;
-
-my $diff=$t2-$t1;
-
-print "Using time $diff\n";
-
-open $fh,">>result.txt";
-
-for my $name (keys %filmhash){
-	print $fh $name."\n";
-}
-
-close $fh;
 
